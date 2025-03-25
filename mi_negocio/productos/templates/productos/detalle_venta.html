@@ -1,0 +1,26 @@
+<h1>Venta #{{ venta.id }}</h1>
+<p>Fecha: {{ venta.fecha }}</p>
+<p>Total de la Venta: {{ venta.total_venta }}</p>
+<p>Ganancia Total: {{ venta.ganancia_total }}</p>
+
+<h2>Detalles de los Productos</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Subtotal</th>
+            <th>Ganancia</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for detalle in venta.detalles.all %}
+        <tr>
+            <td>{{ detalle.producto.articulo }}</td>
+            <td>{{ detalle.cantidad }}</td>
+            <td>{{ detalle.subtotal }}</td>
+            <td>{{ detalle.ganancia }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Mi Negocio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        nav {
+            text-align: center;
+            margin: 1rem 0;
+        }
+        nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .content {
+            text-align: center;
+            margin: 2rem auto;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Bienvenido a Mi Negocio</h1>
+        <p>Tu solución de facturación y reportes.</p>
+    </header>
+
+    <nav>
+        <a href="{% url 'lista_productos' %}">Productos</a>
+        <a href="{% url 'facturar' %}">Facturas</a>
+        <a href="{% url 'reporte_ventas' %}">Reportes</a>
+    </nav>
+
+    <div class="content">
+        <h2>¡Administra tu negocio fácilmente!</h2>
+        <p>Comienza explorando tus productos, registrando ventas o revisando reportes.</p>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Mi Negocio. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html>

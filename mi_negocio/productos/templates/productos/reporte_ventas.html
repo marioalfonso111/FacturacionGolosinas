@@ -1,0 +1,35 @@
+<h1>Reporte de Ventas</h1>
+
+<!-- Filtros -->
+<div>
+    <a href="?filtro=dia">Hoy</a> |
+    <a href="?filtro=semana">Últimos 7 días</a> |
+    <a href="?filtro=mes">Este mes</a> |
+    <a href="?filtro=todo">Todo</a>
+</div>
+
+<!-- Tabla de Ventas -->
+<table border="1">
+    <thead>
+        <tr>
+            <th>ID Venta</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Ganancia</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for venta in ventas %}
+        <tr>
+            <td>{{ venta.id }}</td>
+            <td>{{ venta.fecha }}</td>
+            <td>{{ venta.total_venta }}</td>
+            <td>{{ venta.ganancia_total }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Totales -->
+<p><strong>Total Ingresos:</strong> ${{ total_ingresos }}</p>
+<p><strong>Total Ganancias:</strong> ${{ total_ganancia }}</p>
