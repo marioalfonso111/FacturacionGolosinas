@@ -69,7 +69,10 @@
 </head>
 <body>
     <h1>Lista de Productos</h1>
-
+    <button onclick="window.location.href='/'" style="padding: 10px 20px; font-size: 16px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
+        Volver al Inicio
+    </button>
+    
     <!-- Botón para agregar producto -->
     <div style="text-align: center;">
         <a href="{% url 'agregar_producto' %}" class="add-button">Agregar Producto</a>
@@ -80,7 +83,7 @@
         <input type="text" name="q" placeholder="Buscar artículos..." value="{{ query|default:'' }}">
         <button type="submit">Buscar</button>
     </form>
-
+    
     <table>
         <thead>
             <tr>

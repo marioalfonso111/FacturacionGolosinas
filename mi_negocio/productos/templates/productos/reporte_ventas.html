@@ -1,35 +1,74 @@
-<h1>Reporte de Ventas</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Ventas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        .container {
+            max-width: 80%;
+            margin: auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 { text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table thead { background-color: #007BFF; color: white; }
+        table thead th { padding: 10px; text-align: center; }
+        table tbody tr:nth-child(odd) { background-color: #f9f9f9; }
+        table tbody tr:nth-child(even) { background-color: #eaeaea; }
+        table tbody td { padding: 10px; text-align: center; }
+        .totales { margin-top: 20px; text-align: right; font-size: 18px; font-weight: bold; }
+        button { margin: 20px auto; padding: 10px 20px; font-size: 16px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reporte de Ventas</h1>
 
-<!-- Filtros -->
-<div>
-    <a href="?filtro=dia">Hoy</a> |
-    <a href="?filtro=semana">Últimos 7 días</a> |
-    <a href="?filtro=mes">Este mes</a> |
-    <a href="?filtro=todo">Todo</a>
-</div>
+        <!-- Filtros -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button onclick="window.location.href='?filtro=dia'" style="margin-right: 10px;">Hoy</button>
+            <button onclick="window.location.href='?filtro=semana'" style="margin-right: 10px;">Última Semana</button>
+            <button onclick="window.location.href='?filtro=mes'">Este Mes</button>
+        </div>
 
-<!-- Tabla de Ventas -->
-<table border="1">
-    <thead>
-        <tr>
-            <th>ID Venta</th>
-            <th>Fecha</th>
-            <th>Total</th>
-            <th>Ganancia</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for venta in ventas %}
-        <tr>
-            <td>{{ venta.id }}</td>
-            <td>{{ venta.fecha }}</td>
-            <td>{{ venta.total_venta }}</td>
-            <td>{{ venta.ganancia_total }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        <!-- Tabla de Ventas -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Venta</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in ventas_con_totales %}
+                <tr>
+                    <td>{{ item.venta.id }}</td>
+                    <td>{{ item.venta.fecha }}</td>
+                    <td>${{ item.subtotal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-<!-- Totales -->
-<p><strong>Total Ingresos:</strong> ${{ total_ingresos }}</p>
-<p><strong>Total Ganancias:</strong> ${{ total_ganancia }}</p>
+        <!-- Totales -->
+        <div class="totales">
+            <p>Total Ingresos: ${{ total_ingresos }}</p>
+            <p>Total Ganancia: ${{ total_ganancia }}</p>
+        </div>
+
+        <!-- Botón Volver al Inicio -->
+        <button onclick="window.location.href='/'">Volver al Inicio</button>
+    </div>
+</body>
+</html>

@@ -13,14 +13,20 @@ from .forms import ProductoForm
 from .models import Venta, DetalleVenta, Producto
 
 def agregar_producto(request):
-    if request.method == 'POST':
-        form = ProductoForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_productos')
-    else:
-        form = ProductoForm()
-    return render(request, 'productos/agregar_producto.html', {'form': form})
+    if request.method == "POST":
+        articulo = request.POST.get("articulo")
+        costo = request.POST.get("costo")
+        venta = request.POST.get("venta")
+
+        # Guarda los datos en la base de datos
+        Producto.objects.create(
+            articulo=articulo,
+            costo=costo,
+            venta=venta,
+        )
+        return redirect('/productos')  # Redirige al listado de productos
+
+    return render(request, "productos/agregar_producto.html")
 
 def editar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
@@ -47,10 +53,10 @@ def lista_productos(request):
     query = request.GET.get('q')  # Obtiene el término de búsqueda de la URL
     if query:
         # Filtrar productos cuyo artículo contenga el término de búsqueda (case insensitive)
-        productos = Producto.objects.filter(articulo__icontains=query)
+        productos = Producto.objects.filter(articulo__icontains=query).order_by('articulo')
     else:
         # Mostrar todos los productos si no hay búsqueda
-        productos = Producto.objects.all()
+        productos = Producto.objects.all().order_by('articulo')
     return render(request, 'productos/lista.html', {'productos': productos, 'query': query})
 
 def registrar_venta(request):
@@ -144,10 +150,6 @@ def generar_factura(request, venta_id):
     pdf.build(elements)
     return response
 
-
-def reporte_ventas(request):
-    from django.utils.timezone import now, timedelta
-
 def reporte_ventas(request):
     filtro = request.GET.get('filtro')  # Obtiene el filtro del parámetro de la URL
     hoy = now().date()
@@ -167,20 +169,29 @@ def reporte_ventas(request):
         # Mostrar todas las ventas si no hay filtro
         ventas = Venta.objects.all()
 
-    # Calcular ingresos y ganancias
-    total_ingresos = ventas.aggregate(Sum('detalles__subtotal'))['detalles__subtotal__sum'] or 0
+    # Calcular totales por venta
+    ventas_con_totales = []
+    for venta in ventas:
+        subtotal = venta.detalles.aggregate(total=Sum('subtotal'))['total'] or 0
+        ventas_con_totales.append({'venta': venta, 'subtotal': subtotal})
+
+    # Calcular ingresos y ganancias totales
+    total_ingresos = sum(item['subtotal'] for item in ventas_con_totales)
     total_ganancia = sum(
-        sum(detalle.subtotal - (detalle.cantidad * detalle.producto.costo) for detalle in venta.detalles.all())
-        for venta in ventas
+        sum(
+            detalle.subtotal - (detalle.cantidad * detalle.producto.costo)
+            for detalle in item['venta'].detalles.all()
+        )
+        for item in ventas_con_totales
     )
 
     return render(request, 'productos/reporte_ventas.html', {
-        'ventas': ventas,
+        'ventas_con_totales': ventas_con_totales,
         'total_ingresos': total_ingresos,
         'total_ganancia': total_ganancia,
         'filtro': filtro
     })
-
+    
 def mostrar_factura(request, venta_id):
     venta = get_object_or_404(Venta, id=venta_id)
     return render(request, 'productos/mostrar_factura.html', {'venta': venta})
