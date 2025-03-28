@@ -16,9 +16,6 @@ class Venta(models.Model):
     def total_venta(self):
         return sum(detalle.subtotal for detalle in self.detalles.all())
 
-    def ganancia_total(self):
-        return sum(detalle.ganancia() for detalle in self.detalles.all())
-
     def __str__(self):
         return f"Venta #{self.id} - {self.fecha.strftime('%Y-%m-%d')}"
 
@@ -32,9 +29,6 @@ class DetalleVenta(models.Model):
         # Calcular el subtotal automáticamente
         self.subtotal = self.cantidad * self.producto.venta
         super().save(*args, **kwargs)
-        
-    def ganancia(self):
-        return (self.producto.venta - self.producto.costo) * self.cantidad
 
     def __str__(self):
         return f"{self.producto.articulo} x {self.cantidad}"

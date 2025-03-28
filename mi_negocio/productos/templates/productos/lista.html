@@ -1,113 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lista de Productos</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        form {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .add-button {
-            background-color: #007bff;
-            display: inline-block;
-            margin-bottom: 15px;
-            text-decoration: none;
-            padding: 10px 15px;
-            color: white;
-            border-radius: 5px;
-        }
-        .add-button:hover {
-            background-color: #0056b3;
-        }
-        input[type="text"] {
-            padding: 8px;
-            width: 300px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        button {
-            padding: 8px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid #ddd;
-        }
-        th {
-            background-color: #007bff;
-            color: white;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-    </style>
 </head>
 <body>
-    <h1>Lista de Productos</h1>
-    <button onclick="window.location.href='/'" style="padding: 10px 20px; font-size: 16px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
-        Volver al Inicio
-    </button>
-    
-    <!-- Botón para agregar producto -->
-    <div style="text-align: center;">
-        <a href="{% url 'agregar_producto' %}" class="add-button">Agregar Producto</a>
-    </div>
-
-    <!-- Formulario de búsqueda -->
-    <form method="get" action="">
-        <input type="text" name="q" placeholder="Buscar artículos..." value="{{ query|default:'' }}">
-        <button type="submit">Buscar</button>
-    </form>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Artículo</th>
-                <th>Costo</th>
-                <th>Venta</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for producto in productos %}
-            <tr>
-                <td>{{ producto.id }}</td>
-                <td>{{ producto.articulo }}</td>
-                <td>${{ producto.costo }}</td>
-                <td>${{ producto.venta }}</td>
-                <td class="action-buttons">
-                    <a href="{% url 'editar_producto' producto.id %}" class="edit-button">Editar</a>
-                    <a href="{% url 'eliminar_producto' producto.id %}" class="delete-button">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h1>Lista de productos</h1>
+    <ul>
+        {% for producto in productos %}
+            <li>{{ producto.articulo }} - Costo: ${{ producto.costo }} - Precio de Venta: {{ producto.venta }}</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>

@@ -1,74 +1,55 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Ventas</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            padding: 20px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .container {
-            max-width: 80%;
-            margin: auto;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
         }
-        h1 { text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table thead { background-color: #007BFF; color: white; }
-        table thead th { padding: 10px; text-align: center; }
-        table tbody tr:nth-child(odd) { background-color: #f9f9f9; }
-        table tbody tr:nth-child(even) { background-color: #eaeaea; }
-        table tbody td { padding: 10px; text-align: center; }
-        .totales { margin-top: 20px; text-align: right; font-size: 18px; font-weight: bold; }
-        button { margin: 20px auto; padding: 10px 20px; font-size: 16px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
+        th {
+            background-color: #f4f4f4;
+        }
+        form {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Reporte de Ventas</h1>
+    <h1>Reporte de Ventas</h1>
 
-        <!-- Filtros -->
-        <div style="text-align: center; margin-bottom: 20px;">
-            <button onclick="window.location.href='?filtro=dia'" style="margin-right: 10px;">Hoy</button>
-            <button onclick="window.location.href='?filtro=semana'" style="margin-right: 10px;">Última Semana</button>
-            <button onclick="window.location.href='?filtro=mes'">Este Mes</button>
-        </div>
+    <!-- Formulario de Filtro por Fecha -->
+    <form method="GET" action="{% url 'reporte_ventas' %}">
+        <label for="fecha">Selecciona una fecha:</label>
+        <input type="date" id="fecha" name="fecha" value="{{ fecha }}">
+        <button type="submit">Filtrar</button>
+    </form>
 
-        <!-- Tabla de Ventas -->
-        <table>
-            <thead>
+    <table>
+        <thead>
+            <tr>
+                <th>ID Venta</th>
+                <th>Fecha</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for venta in ventas %}
                 <tr>
-                    <th>ID Venta</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
+                    <td>{{ venta.id }}</td>
+                    <td>{{ venta.fecha }}</td>
+                    <td>${{ venta.total_venta }}</td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for item in ventas_con_totales %}
-                <tr>
-                    <td>{{ item.venta.id }}</td>
-                    <td>{{ item.venta.fecha }}</td>
-                    <td>${{ item.subtotal }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            {% endfor %}
+        </tbody>
+    </table>
 
-        <!-- Totales -->
-        <div class="totales">
-            <p>Total Ingresos: ${{ total_ingresos }}</p>
-            <p>Total Ganancia: ${{ total_ganancia }}</p>
-        </div>
-
-        <!-- Botón Volver al Inicio -->
-        <button onclick="window.location.href='/'">Volver al Inicio</button>
-    </div>
+    <h2>Total de Ingresos: ${{ total_ingresos }}</h2>
+    <h2>Total de Ganancias: ${{ total_ganancia }}</h2>
 </body>
 </html>

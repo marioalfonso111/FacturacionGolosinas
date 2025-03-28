@@ -2,62 +2,17 @@
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import A5
 from reportlab.lib import colors
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
 from django.shortcuts import render, redirect, get_object_or_404
 from reportlab.lib.units import mm
-from reportlab.lib.styles import ParagraphStyle
 from django.db.models import Sum
-from django.utils.timezone import now, timedelta
 from datetime import datetime
-from .forms import ProductoForm
 from .models import Venta, DetalleVenta, Producto
 
-def agregar_producto(request):
-    if request.method == "POST":
-        articulo = request.POST.get("articulo")
-        costo = request.POST.get("costo")
-        venta = request.POST.get("venta")
-
-        # Guarda los datos en la base de datos
-        Producto.objects.create(
-            articulo=articulo,
-            costo=costo,
-            venta=venta,
-        )
-        return redirect('/productos')  # Redirige al listado de productos
-
-    return render(request, "productos/agregar_producto.html")
-
-def editar_producto(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
-    if request.method == 'POST':
-        form = ProductoForm(request.POST, instance=producto)
-        if form.is_valid():
-            form.save()
-            return redirect('lista_productos')
-    else:
-        form = ProductoForm(instance=producto)
-    return render(request, 'productos/editar_producto.html', {'form': form})
-
-def eliminar_producto(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
-    if request.method == 'POST':
-        producto.delete()
-        return redirect('lista_productos')
-    return render(request, 'productos/eliminar_producto.html', {'producto': producto})
-
-def pagina_principal(request):
-    return render(request, 'productos/pagina_principal.html')
-
 def lista_productos(request):
-    query = request.GET.get('q')  # Obtiene el término de búsqueda de la URL
-    if query:
-        # Filtrar productos cuyo artículo contenga el término de búsqueda (case insensitive)
-        productos = Producto.objects.filter(articulo__icontains=query).order_by('articulo')
-    else:
-        # Mostrar todos los productos si no hay búsqueda
-        productos = Producto.objects.all().order_by('articulo')
-    return render(request, 'productos/lista.html', {'productos': productos, 'query': query})
+    productos = Producto.objects.all()  # Obtiene todos los productos de la base de datos
+    return render(request, 'productos/lista.html', {'productos': productos})
 
 def registrar_venta(request):
     
@@ -103,7 +58,8 @@ def generar_factura(request, venta_id):
     elements = []
 
     # Título centrado
-    
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.platypus import Paragraph
     estilo_titulo = ParagraphStyle('titulo', fontSize=16, alignment=1, fontName="Helvetica-Bold")
     titulo = Paragraph("Golosinas", estilo_titulo)
     elements.append(titulo)
@@ -150,48 +106,33 @@ def generar_factura(request, venta_id):
     pdf.build(elements)
     return response
 
-def reporte_ventas(request):
-    filtro = request.GET.get('filtro')  # Obtiene el filtro del parámetro de la URL
-    hoy = now().date()
 
-    if filtro == 'dia':
-        # Ventas del día actual
-        ventas = Venta.objects.filter(fecha__date=hoy)
-    elif filtro == 'semana':
-        # Ventas de los últimos 7 días
-        semana_pasada = hoy - timedelta(days=7)
-        ventas = Venta.objects.filter(fecha__date__range=[semana_pasada, hoy])
-    elif filtro == 'mes':
-        # Ventas del mes actual
-        primer_dia_mes = hoy.replace(day=1)
-        ventas = Venta.objects.filter(fecha__date__range=[primer_dia_mes, hoy])
+def reporte_ventas(request):
+    # Inicializar filtro de fecha
+    fecha = request.GET.get('fecha')
+    
+    # Filtrar ventas por fecha, si se selecciona una
+    if fecha:
+        fecha_inicio = datetime.strptime(fecha, "%Y-%m-%d")
+        ventas = Venta.objects.filter(fecha__date=fecha_inicio)
     else:
-        # Mostrar todas las ventas si no hay filtro
         ventas = Venta.objects.all()
 
-    # Calcular totales por venta
-    ventas_con_totales = []
-    for venta in ventas:
-        subtotal = venta.detalles.aggregate(total=Sum('subtotal'))['total'] or 0
-        ventas_con_totales.append({'venta': venta, 'subtotal': subtotal})
-
-    # Calcular ingresos y ganancias totales
-    total_ingresos = sum(item['subtotal'] for item in ventas_con_totales)
+    # Calcular totales
+    total_ingresos = ventas.aggregate(Sum('detalles__subtotal'))['detalles__subtotal__sum'] or 0
     total_ganancia = sum(
-        sum(
-            detalle.subtotal - (detalle.cantidad * detalle.producto.costo)
-            for detalle in item['venta'].detalles.all()
-        )
-        for item in ventas_con_totales
+        sum(detalle.subtotal - (detalle.cantidad * detalle.producto.costo) for detalle in venta.detalles.all())
+        for venta in ventas
     )
 
+    # Enviar datos al template
     return render(request, 'productos/reporte_ventas.html', {
-        'ventas_con_totales': ventas_con_totales,
+        'ventas': ventas,
         'total_ingresos': total_ingresos,
         'total_ganancia': total_ganancia,
-        'filtro': filtro
+        'fecha': fecha
     })
-    
+
 def mostrar_factura(request, venta_id):
     venta = get_object_or_404(Venta, id=venta_id)
     return render(request, 'productos/mostrar_factura.html', {'venta': venta})
@@ -199,13 +140,3 @@ def mostrar_factura(request, venta_id):
 def facturar(request):
     productos = Producto.objects.all()
     return render(request, 'productos/facturar.html', {'productos': productos})
-
-def detalle_venta(request, pk):
-    venta = get_object_or_404(Venta, pk=pk)
-    return render(request, 'detalle_venta.html', {'venta': venta})
-
-def lista_ventas(request):
-    ventas = Venta.objects.all()
-    return render(request, 'lista_ventas.html', {'ventas': ventas})
-
-
