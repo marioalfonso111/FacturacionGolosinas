@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facturar</title>
+    <style>
+        /* Estilos básicos */
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 1rem; background: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        .btn { padding: 0.5rem 1rem; text-decoration: none; color: white; background-color: #4CAF50; border-radius: 4px; }
+        .btn:hover { background-color: #45a049; }
+        .sugerencias { list-style: none; padding: 0; margin: 0; background: white; border: 1px solid #ddd; max-height: 150px; overflow-y: auto; position: absolute; z-index: 1000; }
+        .sugerencias li { padding: 0.5rem; cursor: pointer; }
+        .sugerencias li:hover { background-color: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Facturar Productos</h1>
+
+        <h2>Productos Seleccionados</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="productos_seleccionados">
+                <tr>
+                    <td>
+                        <input type="text" class="buscar_producto" placeholder="Escribe para buscar..." oninput="buscarProducto(this)">
+                        <ul class="sugerencias" style="display: none;"></ul>
+                    </td>
+                    <td class="precio_producto">0.00</td>
+                    <td><input type="number" value="1" min="1" onchange="actualizarSubtotal(this)"></td>
+                    <td class="total_producto">0.00</td>
+                    <td><button type="button" onclick="eliminarProducto(this)">Eliminar</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn" onclick="agregarFila()">Agregar Producto</button>
+        <h3>Total de la Venta: $<span id="total_venta">0.00</span></h3>
+        <button class="btn" id="finalizar_venta">Finalizar Venta</button>
+    </div>
+
+    <script>
+        const totalVenta = document.getElementById('total_venta');
+        const productosSeleccionados = document.getElementById('productos_seleccionados');
+        let total = 0;
+
+        async function buscarProducto(input) {
+            const query = input.value;
+            const sugerencias = input.nextElementSibling;
+
+            if (query.length > 2) {
+                const response = await fetch(`/api/buscar-producto/?q=${query}`);
+                if (response.ok) {
+                    const productos = await response.json();
+                    mostrarSugerencias(productos, sugerencias, input);
+                }
+            } else {
+                sugerencias.style.display = 'none';
+            }
+        }
+
+        function mostrarSugerencias(productos, sugerencias, input) {
+            sugerencias.innerHTML = '';
+            productos.forEach(producto => {
+                const item = document.createElement('li');
+                item.textContent = `${producto.articulo} - $${producto.venta}`;
+                item.dataset.precio = producto.venta;
+                item.addEventListener('click', () => seleccionarProducto(item, input));
+                sugerencias.appendChild(item);
+            });
+            sugerencias.style.display = 'block';
+        }
+
+        function seleccionarProducto(item, input) {
+            const fila = input.closest('tr');
+            const precioCelda = fila.querySelector('.precio_producto');
+            const cantidadInput = fila.querySelector('input[type="number"]');
+            const subtotalCelda = fila.querySelector('.total_producto');
+
+            input.value = item.textContent.split(' - ')[0];
+            precioCelda.textContent = parseFloat(item.dataset.precio).toFixed(2);
+            const subtotal = parseFloat(item.dataset.precio) * parseInt(cantidadInput.value);
+            subtotalCelda.textContent = subtotal.toFixed(2);
+
+            input.nextElementSibling.style.display = 'none';
+            actualizarTotalVenta();
+        }
+
+        function actualizarSubtotal(input) {
+            const fila = input.closest('tr');
+            const precio = parseFloat(fila.querySelector('.precio_producto').textContent) || 0;
+            const subtotalCelda = fila.querySelector('.total_producto');
+
+            const subtotal = precio * parseInt(input.value);
+            subtotalCelda.textContent = subtotal.toFixed(2);
+
+            actualizarTotalVenta();
+        }
+
+        function actualizarTotalVenta() {
+            total = 0;
+            document.querySelectorAll('.total_producto').forEach(celda => {
+                total += parseFloat(celda.textContent) || 0;
+            });
+            totalVenta.textContent = total.toFixed(2);
+        }
+
+        function agregarFila() {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>
+                    <input type="text" class="buscar_producto" placeholder="Escribe para buscar..." oninput="buscarProducto(this)">
+                    <ul class="sugerencias" style="display: none;"></ul>
+                </td>
+                <td class="precio_producto">0.00</td>
+                <td><input type="number" value="1" min="1" onchange="actualizarSubtotal(this)"></td>
+                <td class="total_producto">0.00</td>
+                <td><button type="button" onclick="eliminarProducto(this)">Eliminar</button></td>
+            `;
+            productosSeleccionados.appendChild(fila);
+        }
+
+        function eliminarProducto(boton) {
+            const fila = boton.closest('tr');
+            fila.remove();
+            actualizarTotalVenta();
+        }
+
+        document.getElementById('finalizar_venta').addEventListener('click', async () => {
+            const productos = [];
+            document.querySelectorAll('#productos_seleccionados tr').forEach(row => {
+                const input = row.querySelector('.buscar_producto');
+                const productoNombre = input.value;
+                const precio = parseFloat(row.querySelector('.precio_producto').textContent);
+                const cantidad = parseInt(row.querySelector('input[type="number"]').value);
+                const subtotal = parseFloat(row.querySelector('.total_producto').textContent);
+
+                if (productoNombre) {
+                    productos.push({ producto: productoNombre, precio, cantidad, subtotal });
+                }
+            });
+
+            const response = await fetch('/guardar-transaccion/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ productos, total })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert('Venta finalizada con éxito. Imprimiendo factura...');
+                window.print();
+            }
+        });
+    </script>
+</body>
+</html>

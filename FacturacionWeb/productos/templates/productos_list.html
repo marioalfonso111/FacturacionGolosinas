@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Productos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 0.5rem;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            color: white;
+            background-color: #4CAF50;
+            border-radius: 4px;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn-danger {
+            background-color: #f44336;
+        }
+        .btn-danger:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Listado de Productos</h1>
+
+        <form method="post" enctype="multipart/form-data" action="{% url 'cargar_productos_excel' %}" style="margin-bottom: 2rem;">
+            {% csrf_token %}
+            <label for="archivo_excel">Subir archivo Excel:</label>
+            <input type="file" name="archivo_excel" id="archivo_excel" accept=".xlsx">
+            <button type="submit">Cargar Productos</button>
+        </form>
+
+        <!-- Buscador -->
+        <form method="GET" action="" style="margin-bottom: 2rem;">
+            <input type="text" name="q" placeholder="Buscar producto..." value="{{ query }}">
+            <button type="submit" class="btn">Buscar</button>
+        </form>
+        <!-- Botones de acción -->
+        <div style="margin: 1rem 0;">
+            <a href="{% url 'agregar_producto' %}" class="btn">Agregar Producto</a>
+            <a href="{% url 'home' %}" class="btn">Volver a Inicio</a>
+        </div>
+        <!-- Tabla de productos -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Artículo</th>
+                    <th>Costo</th>
+                    <th>Venta</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.articulo }}</td>
+                        <td>{{ producto.costo|floatformat:2 }}</td>
+                        <td>{{ producto.venta|floatformat:2 }}</td>
+                        <td class="actions">
+                            <a href="{% url 'editar_producto' producto.id %}" class="btn">Editar</a>
+                            <a href="{% url 'eliminar_producto' producto.id %}" class="btn btn-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No hay productos disponibles.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

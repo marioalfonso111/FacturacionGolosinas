@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Ventas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 1rem; background: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        .btn { padding: 0.5rem 1rem; text-decoration: none; color: white; background-color: #4CAF50; border-radius: 4px; }
+        .btn:hover { background-color: #45a049; }
+        .btn-danger { background-color: #f44336; }
+        .btn-danger:hover { background-color: #e53935; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reporte de Ventas</h1>
+        <div style="margin-bottom: 1rem;">
+            <a href="{% url 'home' %}" class="btn">Volver a Inicio</a>
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <a href="?filtro=dia" class="btn">Ganancia del Día</a>
+            <a href="?filtro=semana" class="btn">Ganancia de la Semana</a>
+            <a href="?filtro=mes" class="btn">Ganancia del Mes</a>
+            <a href="?filtro=todo" class="btn">Todas las Ventas</a>
+        </div>
+        <h3>Ganancia Total: ${{ ganancia_total }}</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Ganancia</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in transacciones %}
+                <tr>
+                    <td>{{ item.transaccion.fecha }}</td>
+                    <td>${{ item.transaccion.total }}</td>
+                    <td>${{ item.ganancia }}</td>
+                    <td>
+                        <button onclick="mostrarDetalles({{ item.transaccion.id }})" class="btn">Ver Detalles</button>
+                        <button onclick="eliminarTransaccion({{ item.transaccion.id }})" class="btn btn-danger">Eliminar</button>
+                        <div id="detalles-{{ item.transaccion.id }}" style="display: none; margin-top: 1rem;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Precio</th>
+                                        <th>Cantidad</th>
+                                        <th>Subtotal</th>
+                                        <th>Ganancia</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for detalle in item.detalles %}
+                                    <tr>
+                                        <td>{{ detalle.producto }}</td>
+                                        <td>${{ detalle.precio }}</td>
+                                        <td>{{ detalle.cantidad }}</td>
+                                        <td>${{ detalle.subtotal }}</td>
+                                        <td>${{ detalle.ganancia }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No hay ventas registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function mostrarDetalles(id) {
+            const detalles = document.getElementById(`detalles-${id}`);
+            detalles.style.display = detalles.style.display === 'none' ? 'block' : 'none';
+        }
+
+        async function eliminarTransaccion(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar esta transacción?')) {
+                const response = await fetch(`/eliminar-transaccion/${id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                if (response.ok) {
+                    alert('Transacción eliminada con éxito.');
+                    location.reload();
+                } else {
+                    alert('Error al eliminar la transacción.');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

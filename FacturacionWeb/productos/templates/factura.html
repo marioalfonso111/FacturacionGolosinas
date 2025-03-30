@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+            color: #333;
+            width: 148mm; /* A5 width */
+            height: 210mm; /* A5 height */
+        }
+        .header {
+            text-align: center;
+            padding: 1rem 0;
+            border-bottom: 2px solid #4CAF50;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #4CAF50;
+        }
+        .header p {
+            margin: 0;
+            font-size: 1rem;
+            color: #555;
+        }
+        .details {
+            margin: 1rem auto;
+            width: 90%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .total {
+            text-align: right;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Golosinas</h1>
+        <p>Teléfono: 094471243</p>
+    </div>
+    <div class="details">
+        <h2>Detalle de Productos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for detalle in detalles %}
+                <tr>
+                    <td>{{ detalle.producto }}</td>
+                    <td>${{ detalle.precio }}</td>
+                    <td>{{ detalle.cantidad }}</td>
+                    <td>${{ detalle.subtotal }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="total">
+            Total: ${{ total }}
+        </div>
+    </div>
+</body>
+</html>

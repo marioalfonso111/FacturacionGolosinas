@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas Registradas</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 1rem; background: white; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+        th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        .btn { padding: 0.5rem 1rem; text-decoration: none; color: white; background-color: #4CAF50; border-radius: 4px; }
+        .btn:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ventas Registradas</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Detalles</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaccion in transacciones %}
+                <tr>
+                    <td>{{ transaccion.fecha }}</td>
+                    <td>${{ transaccion.total }}</td>
+                    <td>
+                        <button onclick="mostrarDetalles({{ transaccion.id }})">Ver Detalles</button>
+                        <div id="detalles-{{ transaccion.id }}" style="display: none; margin-top: 1rem;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Precio</th>
+                                        <th>Cantidad</th>
+                                        <th>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for detalle in transaccion.detalles.all %}
+                                    <tr>
+                                        <td>{{ detalle.producto }}</td>
+                                        <td>${{ detalle.precio }}</td>
+                                        <td>{{ detalle.cantidad }}</td>
+                                        <td>${{ detalle.subtotal }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3">No hay ventas registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function mostrarDetalles(id) {
+            const detalles = document.getElementById(`detalles-${id}`);
+            detalles.style.display = detalles.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>
