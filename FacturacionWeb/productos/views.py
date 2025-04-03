@@ -1,6 +1,6 @@
 import pandas as pd
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, FileResponse
 from django.contrib import messages
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
@@ -8,6 +8,13 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from django.utils.timezone import now, timedelta
 import json
+import io
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
 from .models import Producto, Transaccion, DetalleTransaccion
 
 def home(request):
@@ -215,6 +222,80 @@ def generar_factura(request, transaccion_id):
         detalles = transaccion.detalles.all()
         total = transaccion.total
         return render(request, 'factura.html', {'detalles': detalles, 'total': total})
+    except Transaccion.DoesNotExist:
+        messages.error(request, "Transacción no encontrada")
+        return redirect('listar_ventas')
+
+def generar_factura_pdf(request, transaccion_id):
+    try:
+        transaccion = Transaccion.objects.get(id=transaccion_id)
+        detalles = transaccion.detalles.all()
+
+        # Crear un buffer para el PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+        # Estilos
+        styles = getSampleStyleSheet()
+        title_style = styles['Title']
+        subtitle_style = styles['Normal']
+        subtitle_style.fontSize = 14
+        subtitle_style.leading = 16
+        subtitle_style.alignment = 1  # Centrado
+
+        # Título y subtítulo
+        elements = []
+        elements.append(Paragraph("Golosinas", title_style))
+        elements.append(Paragraph("094471243", subtitle_style))  # Teléfono centrado
+        elements.append(Paragraph("<br/><br/>", subtitle_style))  # Espaciado
+
+        # Tabla de productos
+        data = [["Producto", "Cantidad", "Precio Unitario", "Subtotal"]]
+        for detalle in detalles:
+            data.append([
+                detalle.producto.articulo,
+                detalle.cantidad,
+                f"${detalle.precio:.2f}",
+                f"${detalle.subtotal:.2f}"
+            ])
+
+        # Estilo de la tabla
+        table = Table(data, colWidths=[2.5 * inch, 1 * inch, 1.5 * inch, 1.5 * inch])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4CAF50")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+
+        elements.append(table)
+        elements.append(Paragraph("<br/><br/>", subtitle_style))  # Espaciado
+
+        # Total estilizado
+        total_data = [["Total:", f"${transaccion.total:.2f}"]]
+        total_table = Table(total_data, colWidths=[1.5 * inch, 2 * inch])  # Ajustar el ancho de las columnas
+        total_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#4CAF50")),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('BOX', (0, 0), (-1, -1), 2, colors.black),
+            ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+
+        elements.append(total_table)
+
+        # Generar el PDF
+        doc.build(elements)
+        buffer.seek(0)
+
+        # Devolver el PDF como respuesta
+        return FileResponse(buffer, as_attachment=True, filename="factura.pdf")
     except Transaccion.DoesNotExist:
         messages.error(request, "Transacción no encontrada")
         return redirect('listar_ventas')

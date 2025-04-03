@@ -49,6 +49,7 @@
         <button class="btn" onclick="agregarFila()">Agregar Producto</button>
         <h3>Total de la Venta: $<span id="total_venta">0.00</span></h3>
         <button class="btn" id="finalizar_venta">Finalizar Venta</button>
+        <a href="{% url 'home' %}" class="btn" style="margin-top: 1rem; display: inline-block;">Volver a Inicio</a>
     </div>
 
     <script>
@@ -163,8 +164,10 @@
 
             const result = await response.json();
             if (result.success) {
-                alert('Venta finalizada con éxito. Imprimiendo factura...');
-                window.print();
+                alert('Venta finalizada con éxito. Descargando factura...');
+                window.location.href = `/factura-pdf/${result.transaccion_id}/`;
+            } else {
+                alert('Error al finalizar la venta.');
             }
         });
     </script>
